@@ -36,33 +36,40 @@ class AddBorrowingUseCaseTest {
     @BeforeEach
     void setUp() {
         // Initialize test data
+        LocalDate startDate = LocalDate.now();
+        LocalDate endDate = LocalDate.now().plusDays(14);
+        
+        // Create borrowing DTO
         testBorrowingDTO = BorrowingDTO.builder()
                 .id(1)
                 .userId(100)
-                .bookId(200)
-                .borrowDate(LocalDate.now())
-                .dueDate(LocalDate.now().plusDays(14))
-                .returnDate(null)
-                .status("BORROWED")
+                .bookUnitId(200)
+                .shippingAddress("123 Test Street")
+                .startDate(startDate)
+                .endDate(endDate)
                 .build();
 
-        testBorrowingEntity = new BorrowingEntity();
-        testBorrowingEntity.setId(1);
-        testBorrowingEntity.setUserId(100);
-        testBorrowingEntity.setBookId(200);
-        testBorrowingEntity.setBorrowDate(LocalDate.now());
-        testBorrowingEntity.setDueDate(LocalDate.now().plusDays(14));
-        testBorrowingEntity.setReturnDate(null);
-        testBorrowingEntity.setStatus("BORROWED");
+        // Create borrowing entity
+        testBorrowingEntity = BorrowingEntity.builder()
+                .id(1)
+                .userId(100)
+                .bookUnitId(200)
+                .shippingAddress("123 Test Street")
+                .startDate(startDate)
+                .endDate(endDate)
+                .createdAt(LocalDate.now())
+                .build();
 
-        savedBorrowingEntity = new BorrowingEntity();
-        savedBorrowingEntity.setId(1);
-        savedBorrowingEntity.setUserId(100);
-        savedBorrowingEntity.setBookId(200);
-        savedBorrowingEntity.setBorrowDate(LocalDate.now());
-        savedBorrowingEntity.setDueDate(LocalDate.now().plusDays(14));
-        savedBorrowingEntity.setReturnDate(null);
-        savedBorrowingEntity.setStatus("BORROWED");
+        // Create saved borrowing entity
+        savedBorrowingEntity = BorrowingEntity.builder()
+                .id(1)
+                .userId(100)
+                .bookUnitId(200)
+                .shippingAddress("123 Test Street")
+                .startDate(startDate)
+                .endDate(endDate)
+                .createdAt(LocalDate.now())
+                .build();
     }
 
     @Test
@@ -79,11 +86,10 @@ class AddBorrowingUseCaseTest {
         assertNotNull(result);
         assertEquals(testBorrowingDTO.getId(), result.getId());
         assertEquals(testBorrowingDTO.getUserId(), result.getUserId());
-        assertEquals(testBorrowingDTO.getBookId(), result.getBookId());
-        assertEquals(testBorrowingDTO.getBorrowDate(), result.getBorrowDate());
-        assertEquals(testBorrowingDTO.getDueDate(), result.getDueDate());
-        assertEquals(testBorrowingDTO.getReturnDate(), result.getReturnDate());
-        assertEquals(testBorrowingDTO.getStatus(), result.getStatus());
+        assertEquals(testBorrowingDTO.getBookUnitId(), result.getBookUnitId());
+        assertEquals(testBorrowingDTO.getShippingAddress(), result.getShippingAddress());
+        assertEquals(testBorrowingDTO.getStartDate(), result.getStartDate());
+        assertEquals(testBorrowingDTO.getEndDate(), result.getEndDate());
 
         // Verify interactions
         verify(borrowingMapper, times(1)).toEntity(testBorrowingDTO);

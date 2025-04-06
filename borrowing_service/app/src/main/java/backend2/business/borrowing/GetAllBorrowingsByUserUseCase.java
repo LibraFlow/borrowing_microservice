@@ -20,6 +20,10 @@ public class GetAllBorrowingsByUserUseCase {
 
     @Transactional
     public List<BorrowingDTO> getAllBorrowingsByUser(Integer userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID cannot be null");
+        }
+        
         return borrowingRepository.findByUserId(userId)
                 .stream()
                 .map(borrowingMapper::toDTO)

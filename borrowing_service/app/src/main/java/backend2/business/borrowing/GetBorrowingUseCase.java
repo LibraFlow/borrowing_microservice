@@ -17,6 +17,10 @@ public class GetBorrowingUseCase {
 
     @Transactional
     public BorrowingDTO getBorrowing(Integer id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Borrowing ID cannot be null");
+        }
+        
         return borrowingRepository.findById(id)
                 .map(borrowingMapper::toDTO)
                 .orElseThrow(() -> new RuntimeException("Borrowing not found with id: " + id));

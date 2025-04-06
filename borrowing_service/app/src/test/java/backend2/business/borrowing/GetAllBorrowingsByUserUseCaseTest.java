@@ -44,46 +44,50 @@ class GetAllBorrowingsByUserUseCaseTest {
     void setUp() {
         // Initialize test data
         testUserId = 100;
+        LocalDate startDate1 = LocalDate.now();
+        LocalDate endDate1 = LocalDate.now().plusDays(14);
+        LocalDate startDate2 = LocalDate.now().minusDays(5);
+        LocalDate endDate2 = LocalDate.now().plusDays(9);
         
         // Create first borrowing
         testBorrowingDTO1 = BorrowingDTO.builder()
                 .id(1)
                 .userId(testUserId)
-                .bookId(200)
-                .borrowDate(LocalDate.now())
-                .dueDate(LocalDate.now().plusDays(14))
-                .returnDate(null)
-                .status("BORROWED")
+                .bookUnitId(200)
+                .shippingAddress("123 Test Street")
+                .startDate(startDate1)
+                .endDate(endDate1)
                 .build();
 
-        testBorrowingEntity1 = new BorrowingEntity();
-        testBorrowingEntity1.setId(1);
-        testBorrowingEntity1.setUserId(testUserId);
-        testBorrowingEntity1.setBookId(200);
-        testBorrowingEntity1.setBorrowDate(LocalDate.now());
-        testBorrowingEntity1.setDueDate(LocalDate.now().plusDays(14));
-        testBorrowingEntity1.setReturnDate(null);
-        testBorrowingEntity1.setStatus("BORROWED");
+        testBorrowingEntity1 = BorrowingEntity.builder()
+                .id(1)
+                .userId(testUserId)
+                .bookUnitId(200)
+                .shippingAddress("123 Test Street")
+                .startDate(startDate1)
+                .endDate(endDate1)
+                .createdAt(LocalDate.now())
+                .build();
         
         // Create second borrowing
         testBorrowingDTO2 = BorrowingDTO.builder()
                 .id(2)
                 .userId(testUserId)
-                .bookId(201)
-                .borrowDate(LocalDate.now().minusDays(5))
-                .dueDate(LocalDate.now().plusDays(9))
-                .returnDate(null)
-                .status("BORROWED")
+                .bookUnitId(201)
+                .shippingAddress("456 Another Street")
+                .startDate(startDate2)
+                .endDate(endDate2)
                 .build();
 
-        testBorrowingEntity2 = new BorrowingEntity();
-        testBorrowingEntity2.setId(2);
-        testBorrowingEntity2.setUserId(testUserId);
-        testBorrowingEntity2.setBookId(201);
-        testBorrowingEntity2.setBorrowDate(LocalDate.now().minusDays(5));
-        testBorrowingEntity2.setDueDate(LocalDate.now().plusDays(9));
-        testBorrowingEntity2.setReturnDate(null);
-        testBorrowingEntity2.setStatus("BORROWED");
+        testBorrowingEntity2 = BorrowingEntity.builder()
+                .id(2)
+                .userId(testUserId)
+                .bookUnitId(201)
+                .shippingAddress("456 Another Street")
+                .startDate(startDate2)
+                .endDate(endDate2)
+                .createdAt(LocalDate.now())
+                .build();
         
         // Create lists for testing
         testBorrowingEntities = Arrays.asList(testBorrowingEntity1, testBorrowingEntity2);
@@ -105,10 +109,16 @@ class GetAllBorrowingsByUserUseCaseTest {
         assertEquals(2, result.size());
         assertEquals(testBorrowingDTO1.getId(), result.get(0).getId());
         assertEquals(testBorrowingDTO1.getUserId(), result.get(0).getUserId());
-        assertEquals(testBorrowingDTO1.getBookId(), result.get(0).getBookId());
+        assertEquals(testBorrowingDTO1.getBookUnitId(), result.get(0).getBookUnitId());
+        assertEquals(testBorrowingDTO1.getShippingAddress(), result.get(0).getShippingAddress());
+        assertEquals(testBorrowingDTO1.getStartDate(), result.get(0).getStartDate());
+        assertEquals(testBorrowingDTO1.getEndDate(), result.get(0).getEndDate());
         assertEquals(testBorrowingDTO2.getId(), result.get(1).getId());
         assertEquals(testBorrowingDTO2.getUserId(), result.get(1).getUserId());
-        assertEquals(testBorrowingDTO2.getBookId(), result.get(1).getBookId());
+        assertEquals(testBorrowingDTO2.getBookUnitId(), result.get(1).getBookUnitId());
+        assertEquals(testBorrowingDTO2.getShippingAddress(), result.get(1).getShippingAddress());
+        assertEquals(testBorrowingDTO2.getStartDate(), result.get(1).getStartDate());
+        assertEquals(testBorrowingDTO2.getEndDate(), result.get(1).getEndDate());
 
         // Verify interactions
         verify(borrowingRepository, times(1)).findByUserId(testUserId);

@@ -19,6 +19,10 @@ public class AddBorrowingUseCase {
 
     @Transactional
     public BorrowingDTO createBorrowing(BorrowingDTO borrowingDTO) {
+        if (borrowingDTO == null) {
+            throw new IllegalArgumentException("BorrowingDTO cannot be null");
+        }
+        
         BorrowingEntity borrowingEntity = borrowingMapper.toEntity(borrowingDTO);
         BorrowingEntity savedBorrowing = borrowingRepository.save(borrowingEntity);
         return borrowingMapper.toDTO(savedBorrowing);
