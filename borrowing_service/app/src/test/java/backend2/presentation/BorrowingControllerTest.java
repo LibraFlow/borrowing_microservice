@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
@@ -41,9 +42,10 @@ public class BorrowingControllerTest {
         testBorrowingDTO = BorrowingDTO.builder()
                 .id(1)
                 .userId(1)
-                .bookId(1)
-                .borrowDate("2023-01-01")
-                .returnDate("2023-02-01")
+                .bookUnitId(1)
+                .shippingAddress("123 Test Street")
+                .startDate(LocalDate.of(2023, 1, 1))
+                .endDate(LocalDate.of(2023, 2, 1))
                 .build();
     }
 
