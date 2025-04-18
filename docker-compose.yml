@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  db5:
+    image: postgres:latest
+    container_name: borrowing_container
+    environment:
+      POSTGRES_USER: user5
+      POSTGRES_PASSWORD: password5
+      POSTGRES_DB: db5
+    ports:
+      - "5436:5432"
+    volumes:
+      - db5-data:/var/lib/postgresql/data
+    networks:
+      - borrowing-network
+
+  borrowing-service:
+    build:
+      context: ./borrowing_service
+      dockerfile: Dockerfile
+    container_name: borrowing-service
+    ports:
+      - "8086:8086"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db5:5432/db5
+      - SPRING_DATASOURCE_USERNAME=user5
+      - SPRING_DATASOURCE_PASSWORD=password5
+    depends_on:
+      - db5
+    networks:
+      - borrowing-network
+
+volumes:
+  db5-data:
+
+networks:
+  borrowing-network:
+    driver: bridge 
