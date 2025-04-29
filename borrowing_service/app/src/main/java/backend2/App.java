@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class App {
     @GetMapping("/")
     public String getGreeting() {
-        return "Hello World!";
+        return "Hello World! Borrowing Service Revision 2!";
     }
 
     public static void main(String[] args) {
