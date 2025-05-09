@@ -10,6 +10,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.junit.jupiter.api.AfterEach;
+import java.util.Collections;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -49,8 +55,23 @@ public class BorrowingControllerTest {
                 .build();
     }
 
+    private void mockAuthenticationWithRole(String role) {
+        Authentication authentication = mock(Authentication.class);
+        // Use raw cast to avoid generics issues
+        when(authentication.getAuthorities()).thenReturn((java.util.Collection) Collections.singletonList(new SimpleGrantedAuthority(role)));
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+    }
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
+
     @Test
     void createBorrowingTest() {
+        mockAuthenticationWithRole("ROLE_ADMINISTRATOR");
         // Arrange
         when(addBorrowingUseCase.createBorrowing(any(BorrowingDTO.class))).thenReturn(testBorrowingDTO);
 
@@ -66,6 +87,7 @@ public class BorrowingControllerTest {
 
     @Test
     void getBorrowingTest() {
+        mockAuthenticationWithRole("ROLE_ADMINISTRATOR");
         // Arrange
         Integer borrowingId = 1;
         when(getBorrowingUseCase.getBorrowing(anyInt())).thenReturn(testBorrowingDTO);
@@ -82,6 +104,7 @@ public class BorrowingControllerTest {
 
     @Test
     void getAllBorrowingsByUserTest() {
+        mockAuthenticationWithRole("ROLE_ADMINISTRATOR");
         // Arrange
         Integer userId = 1;
         List<BorrowingDTO> expectedBorrowings = Arrays.asList(testBorrowingDTO);

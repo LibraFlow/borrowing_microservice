@@ -137,8 +137,7 @@ class BorrowingEntityTest {
         LocalDate endDate = LocalDate.now().plusDays(14);
         LocalDate createdAt = LocalDate.now();
         
-        BorrowingEntity entity = new BorrowingEntity(1, 100, 200, 
-                "123 Test Street, Test City, 12345", startDate, endDate, createdAt);
+        BorrowingEntity entity = new BorrowingEntity(1, 100, 200, "123 Test Street, Test City, 12345", startDate, endDate, createdAt, true);
 
         assertEquals(1, entity.getId());
         assertEquals(100, entity.getUserId());
