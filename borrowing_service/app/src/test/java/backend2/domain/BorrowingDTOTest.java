@@ -38,7 +38,7 @@ class BorrowingDTOTest {
         LocalDate startDate = LocalDate.of(2023, 1, 1);
         LocalDate endDate = LocalDate.of(2023, 2, 1);
         
-        BorrowingDTO borrowingDTO = new BorrowingDTO(1, 100, 200, "123 Test Street", startDate, endDate);
+        BorrowingDTO borrowingDTO = new BorrowingDTO(1, 100, 200, "123 Test Street", startDate, endDate, true);
 
         // Assert
         assertNotNull(borrowingDTO);
