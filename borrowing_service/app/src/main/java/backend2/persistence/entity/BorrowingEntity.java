@@ -40,4 +40,8 @@ public class BorrowingEntity {
     @PastOrPresent
     @Column(nullable = false)
     private LocalDate createdAt;
+
+    @NotNull
+    @Column(nullable = false)
+    private boolean active = true;
 }

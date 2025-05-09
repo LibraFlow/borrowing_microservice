@@ -6,6 +6,7 @@ import java.time.LocalDate;
 @Builder
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class BorrowingDTO {
     private Integer id;
     private Integer userId;
@@ -13,4 +14,5 @@ public class BorrowingDTO {
     private String shippingAddress;
     private LocalDate startDate;
     private LocalDate endDate;
+    private boolean active;
 }

@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface BorrowingRepository extends JpaRepository<BorrowingEntity, Integer> {
     List<BorrowingEntity> findByUserId(Integer userId);
+    List<BorrowingEntity> findByUserIdAndActiveTrue(Integer userId);
+    List<BorrowingEntity> findByUserIdAndActiveFalse(Integer userId);
 }

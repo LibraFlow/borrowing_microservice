@@ -14,9 +14,13 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     // Handle validation errors (e.g., @Valid validation failures)
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -65,8 +69,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<Map<String, String>> handleInternalServerError(Exception ex) {
+        logger.error("Unexpected error occurred", ex);
         Map<String, String> error = new HashMap<>();
-        error.put("message", "An unexpected error occurred. Please try again later.");
+        error.put("message", "An unexpected error occurred: " + ex.getMessage());
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 

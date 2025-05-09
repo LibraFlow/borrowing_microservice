@@ -24,6 +24,7 @@ public class BorrowingMapper {
                 .shippingAddress(entity.getShippingAddress())
                 .startDate(entity.getStartDate())
                 .endDate(entity.getEndDate())
+                .active(entity.isActive())
                 .build();
     }
 
@@ -40,6 +41,7 @@ public class BorrowingMapper {
                 .startDate(dto.getStartDate())
                 .endDate(dto.getEndDate())
                 .createdAt(dto.getId() == null ? LocalDate.now() : null) // Set createdAt only for new entities
+                .active(dto.isActive())
                 .build();
     }
 }
