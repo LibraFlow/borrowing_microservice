@@ -6,9 +6,10 @@ import backend2.security.EncryptionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDate;
@@ -16,6 +17,7 @@ import java.time.LocalDate;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class BorrowingMapperTest {
 
     @Mock
@@ -31,9 +33,6 @@ class BorrowingMapperTest {
 
     @BeforeEach
     void setUp() {
-        // Mock encryptionService to return the input value for encrypt/decrypt
-        when(encryptionService.encrypt(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
-        when(encryptionService.decrypt(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
         borrowingMapper = new BorrowingMapper(encryptionService);
 
         testEntity = BorrowingEntity.builder()
@@ -69,6 +68,8 @@ class BorrowingMapperTest {
 
     @Test
     void toDTO_WhenEntityIsValid_ShouldMapAllFields() {
+        // Arrange
+        when(encryptionService.decrypt(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
         // Act
         BorrowingDTO result = borrowingMapper.toDTO(testEntity);
 
@@ -93,6 +94,8 @@ class BorrowingMapperTest {
 
     @Test
     void toEntity_WhenDTOIsValid_ShouldMapAllFields() {
+        // Arrange
+        when(encryptionService.encrypt(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
         // Act
         BorrowingEntity result = borrowingMapper.toEntity(testDTO);
 
@@ -110,7 +113,7 @@ class BorrowingMapperTest {
     void toEntity_WhenDTOHasNoId_ShouldSetCreatedAtToToday() {
         // Arrange
         testDTO.setId(null);
-
+        when(encryptionService.encrypt(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
         // Act
         BorrowingEntity result = borrowingMapper.toEntity(testDTO);
 
@@ -121,6 +124,8 @@ class BorrowingMapperTest {
 
     @Test
     void toEntity_WhenDTOHasId_ShouldNotSetCreatedAt() {
+        // Arrange
+        when(encryptionService.encrypt(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
         // Act
         BorrowingEntity result = borrowingMapper.toEntity(testDTO);
 
