@@ -2,11 +2,14 @@ package backend2.business.mapper;
 
 import backend2.domain.BorrowingDTO;
 import backend2.persistence.entity.BorrowingEntity;
+import backend2.security.EncryptionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import static org.mockito.Mockito.*;
 
 import java.time.LocalDate;
 
@@ -15,7 +18,9 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(MockitoExtension.class)
 class BorrowingMapperTest {
 
-    @InjectMocks
+    @Mock
+    private EncryptionService encryptionService;
+
     private BorrowingMapper borrowingMapper;
 
     private BorrowingEntity testEntity;
@@ -26,6 +31,11 @@ class BorrowingMapperTest {
 
     @BeforeEach
     void setUp() {
+        // Mock encryptionService to return the input value for encrypt/decrypt
+        when(encryptionService.encrypt(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(encryptionService.decrypt(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+        borrowingMapper = new BorrowingMapper(encryptionService);
+
         testEntity = BorrowingEntity.builder()
                 .id(1)
                 .userId(100)
@@ -34,6 +44,7 @@ class BorrowingMapperTest {
                 .startDate(TOMORROW)
                 .endDate(NEXT_WEEK)
                 .createdAt(TODAY)
+                .active(true)
                 .build();
 
         testDTO = BorrowingDTO.builder()
@@ -43,6 +54,7 @@ class BorrowingMapperTest {
                 .shippingAddress("123 Test Street, Test City")
                 .startDate(TOMORROW)
                 .endDate(NEXT_WEEK)
+                .active(true)
                 .build();
     }
 
