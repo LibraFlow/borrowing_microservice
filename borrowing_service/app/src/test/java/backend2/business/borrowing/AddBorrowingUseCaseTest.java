@@ -116,7 +116,8 @@ class AddBorrowingUseCaseTest {
         // Arrange
         AddBorrowingUseCase useCase = mock(AddBorrowingUseCase.class);
         Logger logger = mock(Logger.class); // or your actual audit log class
-        Borrowing borrowing = new Borrowing(...); // use your real constructor
+        User user = new User(1L, "username", ...); // fill in required fields
+        Borrowing borrowing = new Borrowing(1L, user, "book1");
         String userId = "user1";
 
         // Act
