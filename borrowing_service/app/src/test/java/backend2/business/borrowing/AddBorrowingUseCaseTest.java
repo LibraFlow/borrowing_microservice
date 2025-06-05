@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.ArgumentCaptor;
 
 import java.time.LocalDate;
 
@@ -107,5 +108,24 @@ class AddBorrowingUseCaseTest {
         // Verify no interactions with dependencies
         verifyNoInteractions(borrowingRepository);
         verifyNoInteractions(borrowingMapper);
+    }
+
+    @Test
+    void borrowingModificationIsLoggedInAuditTrail() {
+        // Arrange
+        BorrowingService borrowingService = mock(BorrowingService.class);
+        AuditTrailService auditTrailService = mock(AuditTrailService.class);
+        User user = new User("user1", "User");
+        Borrowing borrowing = new Borrowing(1L, user, "book1");
+
+        // Act
+        borrowingService.addBorrowing(borrowing, user);
+        verify(borrowingService).addBorrowing(borrowing, user);
+        ArgumentCaptor<AuditTrailEntry> captor = ArgumentCaptor.forClass(AuditTrailEntry.class);
+        verify(auditTrailService).log(captor.capture());
+        AuditTrailEntry entry = captor.getValue();
+        assertEquals("user1", entry.getUserId());
+        assertEquals("ADD_BORROWING", entry.getAction());
+        assertNotNull(entry.getTimestamp());
     }
 } 
