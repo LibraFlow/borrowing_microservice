@@ -12,6 +12,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.ArgumentCaptor;
 import org.slf4j.Logger;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 
@@ -112,18 +116,25 @@ class AddBorrowingUseCaseTest {
     }
 
     @Test
-    void borrowingModificationIsLoggedInAuditTrail() {
+    void createBorrowing_ShouldLogAuditTrail() {
         // Arrange
-        AddBorrowingUseCase useCase = mock(AddBorrowingUseCase.class);
-        Logger logger = mock(Logger.class); // or your actual audit log class
-        User user = new User(1L, "username", ...); // fill in required fields
-        Borrowing borrowing = new Borrowing(1L, user, "book1");
-        String userId = "user1";
+        Logger logger = (Logger) LoggerFactory.getLogger(AddBorrowingUseCase.class);
+        @SuppressWarnings("unchecked")
+        Appender<ILoggingEvent> mockAppender = mock(Appender.class);
+        logger.addAppender(mockAppender);
+
+        when(borrowingMapper.toEntity(any(BorrowingDTO.class))).thenReturn(testBorrowingEntity);
+        when(borrowingRepository.save(any(BorrowingEntity.class))).thenReturn(savedBorrowingEntity);
+        when(borrowingMapper.toDTO(any(BorrowingEntity.class))).thenReturn(testBorrowingDTO);
 
         // Act
-        useCase.addBorrowing(borrowing, userId);
-        verify(useCase).addBorrowing(borrowing, userId);
-        // If you have a log method, verify it was called
-        verify(logger).info(contains(userId));
+        addBorrowingUseCase.createBorrowing(testBorrowingDTO);
+
+        // Assert: verify that the audit log message was produced
+        verify(mockAppender, times(1)).doAppend(argThat(event ->
+            event.getFormattedMessage().contains("AUDIT: Borrowing created") &&
+            event.getFormattedMessage().contains("userId=" + testBorrowingDTO.getUserId())
+        ));
+        logger.detachAppender(mockAppender);
     }
 } 

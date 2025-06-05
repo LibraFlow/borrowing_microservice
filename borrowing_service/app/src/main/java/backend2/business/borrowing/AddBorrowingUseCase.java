@@ -4,6 +4,8 @@ import backend2.persistence.entity.BorrowingEntity;
 import backend2.domain.BorrowingDTO;
 import backend2.persistence.BorrowingRepository;
 import backend2.business.mapper.BorrowingMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import java.time.LocalDate;
 public class AddBorrowingUseCase {
     private final BorrowingRepository borrowingRepository;
     private final BorrowingMapper borrowingMapper;
+    private final Logger logger = LoggerFactory.getLogger(AddBorrowingUseCase.class);
 
     @Transactional
     public BorrowingDTO createBorrowing(BorrowingDTO borrowingDTO) {
@@ -25,6 +28,9 @@ public class AddBorrowingUseCase {
         
         BorrowingEntity borrowingEntity = borrowingMapper.toEntity(borrowingDTO);
         BorrowingEntity savedBorrowing = borrowingRepository.save(borrowingEntity);
+        // Audit log: userId and timestamp
+        logger.info("AUDIT: Borrowing created - userId={}, borrowingId={}, timestamp={}",
+            borrowingDTO.getUserId(), savedBorrowing.getId(), java.time.Instant.now());
         return borrowingMapper.toDTO(savedBorrowing);
     }
 }
