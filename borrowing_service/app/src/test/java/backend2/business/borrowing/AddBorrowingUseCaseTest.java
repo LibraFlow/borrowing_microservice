@@ -11,11 +11,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.ArgumentCaptor;
-import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
-import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 
@@ -117,8 +116,7 @@ class AddBorrowingUseCaseTest {
 
     @Test
     void createBorrowing_ShouldLogAuditTrail() {
-        // Arrange
-        Logger logger = (Logger) LoggerFactory.getLogger(AddBorrowingUseCase.class);
+        ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(AddBorrowingUseCase.class);
         @SuppressWarnings("unchecked")
         Appender<ILoggingEvent> mockAppender = mock(Appender.class);
         logger.addAppender(mockAppender);
