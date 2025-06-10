@@ -13,4 +13,5 @@ public interface BorrowingRepository extends JpaRepository<BorrowingEntity, Inte
     List<BorrowingEntity> findByUserIdAndActiveTrue(Integer userId);
     List<BorrowingEntity> findByUserIdAndActiveFalse(Integer userId);
     List<BorrowingEntity> findByEndDateBeforeAndActiveFalse(LocalDate date);
+    List<BorrowingEntity> findByBookUnitId(Integer bookUnitId);
 }

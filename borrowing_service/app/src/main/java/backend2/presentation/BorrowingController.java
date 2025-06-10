@@ -10,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import java.util.List;
 
@@ -23,6 +24,7 @@ public class BorrowingController {
     private final GetAllBorrowingsByUserUseCase getAllBorrowingsByUserUseCase;
     private final GetActiveBorrowingsByUserUseCase getActiveBorrowingsByUserUseCase;
     private final GetInactiveBorrowingsByUserUseCase getInactiveBorrowingsByUserUseCase;
+    private final GetAllBorrowingsByBookUnitIdUseCase getAllBorrowingsByBookUnitIdUseCase;
 
     private boolean isAdminOrLibrarian(Authentication authentication) {
         return authentication.getAuthorities().stream()
@@ -92,5 +94,23 @@ public class BorrowingController {
             return ResponseEntity.status(403).build();
         }
         return ResponseEntity.ok(getInactiveBorrowingsByUserUseCase.getInactiveBorrowingsByUser(userId));
+    }
+
+    @GetMapping("/by-bookunit/{bookUnitId}")
+    public ResponseEntity<?> getBorrowingsByBookUnitId(
+        @PathVariable Integer bookUnitId,
+        @AuthenticationPrincipal Jwt jwt
+    ) {
+        Integer userId = null;
+        if (jwt != null && jwt.hasClaim("userId")) {
+            userId = ((Number) jwt.getClaim("userId")).intValue();
+        }
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID cannot be null");
+        }
+        if (!hasAccess(SecurityContextHolder.getContext().getAuthentication(), userId)) {
+            return ResponseEntity.status(403).build();
+        }
+        return ResponseEntity.ok(getAllBorrowingsByBookUnitIdUseCase.getAllBorrowingsByBookUnitId(bookUnitId));
     }
 }

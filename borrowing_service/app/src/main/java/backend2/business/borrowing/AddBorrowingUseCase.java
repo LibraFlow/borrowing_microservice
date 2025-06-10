@@ -6,6 +6,9 @@ import backend2.persistence.BorrowingRepository;
 import backend2.business.mapper.BorrowingMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import backend2.domain.BorrowingCreatedEvent;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import backend2.config.RabbitMQConfig;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +22,7 @@ public class AddBorrowingUseCase {
     private final BorrowingRepository borrowingRepository;
     private final BorrowingMapper borrowingMapper;
     private final Logger logger = LoggerFactory.getLogger(AddBorrowingUseCase.class);
+    private final RabbitTemplate rabbitTemplate;
 
     @Transactional
     public BorrowingDTO createBorrowing(BorrowingDTO borrowingDTO) {
@@ -26,11 +30,15 @@ public class AddBorrowingUseCase {
             throw new IllegalArgumentException("BorrowingDTO cannot be null");
         }
         
+        // Save the borrowing to the database
         BorrowingEntity borrowingEntity = borrowingMapper.toEntity(borrowingDTO);
         BorrowingEntity savedBorrowing = borrowingRepository.save(borrowingEntity);
-        // Audit log: userId and timestamp
-        logger.info("AUDIT: Borrowing created - userId={}, borrowingId={}, timestamp={}",
-            borrowingDTO.getUserId(), savedBorrowing.getId(), java.time.Instant.now());
+
+        // Publish the event
+        BorrowingCreatedEvent event = new BorrowingCreatedEvent(savedBorrowing.getBookUnitId());
+        rabbitTemplate.convertAndSend(RabbitMQConfig.BORROWING_CREATED_QUEUE, event);
+
+        // Return the saved DTO (with generated ID, etc.)
         return borrowingMapper.toDTO(savedBorrowing);
     }
 }
