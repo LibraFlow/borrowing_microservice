@@ -88,7 +88,7 @@ class AddBorrowingUseCaseTest {
         when(borrowingMapper.toEntity(any(BorrowingDTO.class))).thenReturn(testBorrowingEntity);
         when(borrowingRepository.save(any(BorrowingEntity.class))).thenReturn(savedBorrowingEntity);
         when(borrowingMapper.toDTO(any(BorrowingEntity.class))).thenReturn(testBorrowingDTO);
-        doNothing().when(rabbitTemplate).convertAndSend(anyString(), any());
+        doNothing().when(rabbitTemplate).convertAndSend(anyString(), any(Object.class));
 
         // Act
         BorrowingDTO result = addBorrowingUseCase.createBorrowing(testBorrowingDTO);
@@ -106,7 +106,7 @@ class AddBorrowingUseCaseTest {
         verify(borrowingMapper, times(1)).toEntity(testBorrowingDTO);
         verify(borrowingRepository, times(1)).save(testBorrowingEntity);
         verify(borrowingMapper, times(1)).toDTO(savedBorrowingEntity);
-        verify(rabbitTemplate, times(1)).convertAndSend(eq(RabbitMQConfig.BORROWING_CREATED_QUEUE), any());
+        verify(rabbitTemplate, times(1)).convertAndSend(eq(RabbitMQConfig.BORROWING_CREATED_QUEUE), any(Object.class));
     }
 
     @Test
@@ -131,7 +131,7 @@ class AddBorrowingUseCaseTest {
         when(borrowingMapper.toEntity(any(BorrowingDTO.class))).thenReturn(testBorrowingEntity);
         when(borrowingRepository.save(any(BorrowingEntity.class))).thenReturn(savedBorrowingEntity);
         when(borrowingMapper.toDTO(any(BorrowingEntity.class))).thenReturn(testBorrowingDTO);
-        doNothing().when(rabbitTemplate).convertAndSend(anyString(), any());
+        doNothing().when(rabbitTemplate).convertAndSend(anyString(), any(Object.class));
 
         // Act
         addBorrowingUseCase.createBorrowing(testBorrowingDTO);
@@ -141,7 +141,7 @@ class AddBorrowingUseCaseTest {
             event.getFormattedMessage().contains("AUDIT: Borrowing created") &&
             event.getFormattedMessage().contains("userId=" + testBorrowingDTO.getUserId())
         ));
-        verify(rabbitTemplate, times(1)).convertAndSend(eq(RabbitMQConfig.BORROWING_CREATED_QUEUE), any());
+        verify(rabbitTemplate, times(1)).convertAndSend(eq(RabbitMQConfig.BORROWING_CREATED_QUEUE), any(Object.class));
         logger.detachAppender(mockAppender);
     }
 } 
