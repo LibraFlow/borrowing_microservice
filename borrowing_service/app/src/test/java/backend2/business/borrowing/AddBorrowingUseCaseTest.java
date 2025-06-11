@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import backend2.config.RabbitMQConfig;
 
 import java.time.LocalDate;
 
@@ -30,6 +32,9 @@ class AddBorrowingUseCaseTest {
 
     @Mock
     private BorrowingMapper borrowingMapper;
+
+    @Mock
+    private RabbitTemplate rabbitTemplate;
 
     @InjectMocks
     private AddBorrowingUseCase addBorrowingUseCase;
@@ -83,6 +88,7 @@ class AddBorrowingUseCaseTest {
         when(borrowingMapper.toEntity(any(BorrowingDTO.class))).thenReturn(testBorrowingEntity);
         when(borrowingRepository.save(any(BorrowingEntity.class))).thenReturn(savedBorrowingEntity);
         when(borrowingMapper.toDTO(any(BorrowingEntity.class))).thenReturn(testBorrowingDTO);
+        doNothing().when(rabbitTemplate).convertAndSend(anyString(), any());
 
         // Act
         BorrowingDTO result = addBorrowingUseCase.createBorrowing(testBorrowingDTO);
@@ -100,6 +106,7 @@ class AddBorrowingUseCaseTest {
         verify(borrowingMapper, times(1)).toEntity(testBorrowingDTO);
         verify(borrowingRepository, times(1)).save(testBorrowingEntity);
         verify(borrowingMapper, times(1)).toDTO(savedBorrowingEntity);
+        verify(rabbitTemplate, times(1)).convertAndSend(eq(RabbitMQConfig.BORROWING_CREATED_QUEUE), any());
     }
 
     @Test
@@ -124,15 +131,17 @@ class AddBorrowingUseCaseTest {
         when(borrowingMapper.toEntity(any(BorrowingDTO.class))).thenReturn(testBorrowingEntity);
         when(borrowingRepository.save(any(BorrowingEntity.class))).thenReturn(savedBorrowingEntity);
         when(borrowingMapper.toDTO(any(BorrowingEntity.class))).thenReturn(testBorrowingDTO);
+        doNothing().when(rabbitTemplate).convertAndSend(anyString(), any());
 
         // Act
         addBorrowingUseCase.createBorrowing(testBorrowingDTO);
 
         // Assert: verify that the audit log message was produced
-        verify(mockAppender, times(1)).doAppend(argThat(event ->
+        verify(mockAppender, atLeastOnce()).doAppend(argThat(event ->
             event.getFormattedMessage().contains("AUDIT: Borrowing created") &&
             event.getFormattedMessage().contains("userId=" + testBorrowingDTO.getUserId())
         ));
+        verify(rabbitTemplate, times(1)).convertAndSend(eq(RabbitMQConfig.BORROWING_CREATED_QUEUE), any());
         logger.detachAppender(mockAppender);
     }
 } 
