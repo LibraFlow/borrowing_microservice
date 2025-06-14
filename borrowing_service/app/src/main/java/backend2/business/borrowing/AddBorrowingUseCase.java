@@ -34,6 +34,13 @@ public class AddBorrowingUseCase {
         BorrowingEntity borrowingEntity = borrowingMapper.toEntity(borrowingDTO);
         BorrowingEntity savedBorrowing = borrowingRepository.save(borrowingEntity);
 
+        // Log audit trail
+        logger.info("AUDIT: Borrowing created - userId={}, bookUnitId={}, startDate={}, endDate={}",
+            borrowingDTO.getUserId(),
+            borrowingDTO.getBookUnitId(),
+            borrowingDTO.getStartDate(),
+            borrowingDTO.getEndDate());
+
         // Publish the event
         BorrowingCreatedEvent event = new BorrowingCreatedEvent(savedBorrowing.getBookUnitId());
         rabbitTemplate.convertAndSend(RabbitMQConfig.BORROWING_CREATED_QUEUE, event);

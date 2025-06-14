@@ -38,6 +38,9 @@ dependencies {
     // PostgreSQL dependencies
     implementation 'org.postgresql:postgresql:42.6.0'
     
+    // H2 Database for testing
+    testImplementation 'com.h2database:h2:2.2.224'
+    
     // Cloud SQL dependencies
     implementation 'com.google.cloud.sql:postgres-socket-factory:1.15.1'
 
@@ -61,6 +64,9 @@ dependencies {
 
     // RabbitMQ dependencies
     implementation 'org.springframework.boot:spring-boot-starter-amqp'
+
+    // Spring Security test dependencies
+    testImplementation 'org.springframework.security:spring-security-test'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
