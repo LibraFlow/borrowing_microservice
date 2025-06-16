@@ -30,6 +30,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
     
     // Lombok
     compileOnly 'org.projectlombok:lombok'
@@ -67,6 +68,10 @@ dependencies {
 
     // Spring Security test dependencies
     testImplementation 'org.springframework.security:spring-security-test'
+
+    // Kafka dependencies
+    implementation 'org.springframework.kafka:spring-kafka'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

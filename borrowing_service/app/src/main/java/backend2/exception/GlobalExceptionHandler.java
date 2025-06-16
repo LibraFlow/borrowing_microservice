@@ -75,5 +75,19 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    // Handle borrowing failures due to subscription issues
+    @ExceptionHandler(IllegalStateException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<Map<String, String>> handleIllegalStateException(IllegalStateException ex) {
+        Map<String, String> error = new HashMap<>();
+        String msg = ex.getMessage();
+        if (msg != null && (msg.contains("subscription") || msg.contains("cover the entire borrowing period"))) {
+            error.put("message", "Borrowing failed: You probably do not have an active subscription, or the end date you specified for returning the book is after your subscription expires.");
+        } else {
+            error.put("message", msg);
+        }
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
     // Handle other specific exceptions as needed
 }

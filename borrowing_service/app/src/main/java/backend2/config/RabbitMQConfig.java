@@ -9,18 +9,4 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMQConfig {
-    
-    public static final String BORROWING_CREATED_QUEUE = "borrowing.created";
-
-    @Bean
-    public Queue borrowingCreatedQueue() {
-        return new Queue(BORROWING_CREATED_QUEUE);
-    }
-
-    @Bean
-    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
-        RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
-        rabbitTemplate.setMessageConverter(new Jackson2JsonMessageConverter());
-        return rabbitTemplate;
-    }
 } 

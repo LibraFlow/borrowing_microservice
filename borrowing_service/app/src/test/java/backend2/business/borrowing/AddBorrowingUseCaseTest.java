@@ -15,10 +15,17 @@ import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import backend2.config.RabbitMQConfig;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
+import org.mockito.ArgumentMatchers;
+import org.springframework.util.concurrent.SettableListenableFuture;
+import java.util.concurrent.CompletableFuture;
 import java.time.LocalDate;
+import org.mockito.Mockito;
+import static org.mockito.Mockito.lenient;
+import backend2.domain.SubscriptionCheckResultEvent;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -33,15 +40,16 @@ class AddBorrowingUseCaseTest {
     @Mock
     private BorrowingMapper borrowingMapper;
 
-    @Mock
-    private RabbitTemplate rabbitTemplate;
-
     @InjectMocks
     private AddBorrowingUseCase addBorrowingUseCase;
 
     private BorrowingDTO testBorrowingDTO;
     private BorrowingEntity testBorrowingEntity;
     private BorrowingEntity savedBorrowingEntity;
+    private ObjectMapper objectMapper = new ObjectMapper();
+    @Mock
+    private KafkaTemplate<String, String> kafkaTemplate;
+    private String userServiceUrl = "http://localhost:8081";
 
     @BeforeEach
     void setUp() {
@@ -80,6 +88,31 @@ class AddBorrowingUseCaseTest {
                 .endDate(endDate)
                 .createdAt(LocalDate.now())
                 .build();
+
+        // Re-instantiate addBorrowingUseCase with all required dependencies
+        addBorrowingUseCase = new AddBorrowingUseCase(borrowingRepository, borrowingMapper, kafkaTemplate, objectMapper, userServiceUrl);
+        // Make the KafkaTemplate.send mock lenient
+        CompletableFuture<org.springframework.kafka.support.SendResult<String, String>> future = CompletableFuture.completedFuture(null);
+        lenient().when(kafkaTemplate.send(anyString(), anyString())).thenReturn(future);
+        // Simulate a successful subscription check result for the correlationId
+        lenient().doAnswer(invocation -> {
+            String topic = invocation.getArgument(0);
+            String message = invocation.getArgument(1);
+            // Extract correlationId from the message if possible
+            if (topic != null && topic.contains("subscription.check.requested")) {
+                // Use ObjectMapper to parse the message and get the correlationId
+                try {
+                    com.fasterxml.jackson.databind.JsonNode node = objectMapper.readTree(message);
+                    String correlationId = node.get("correlationId").asText();
+                    SubscriptionCheckResultEvent result = new SubscriptionCheckResultEvent(100, correlationId, true, LocalDate.now().plusDays(30));
+                    CompletableFuture<SubscriptionCheckResultEvent> futureResult = AddBorrowingUseCase.subscriptionCheckFutures.get(correlationId);
+                    if (futureResult != null) {
+                        futureResult.complete(result);
+                    }
+                } catch (Exception ignored) {}
+            }
+            return future;
+        }).when(kafkaTemplate).send(anyString(), anyString());
     }
 
     @Test
@@ -88,7 +121,6 @@ class AddBorrowingUseCaseTest {
         when(borrowingMapper.toEntity(any(BorrowingDTO.class))).thenReturn(testBorrowingEntity);
         when(borrowingRepository.save(any(BorrowingEntity.class))).thenReturn(savedBorrowingEntity);
         when(borrowingMapper.toDTO(any(BorrowingEntity.class))).thenReturn(testBorrowingDTO);
-        doNothing().when(rabbitTemplate).convertAndSend(anyString(), any(Object.class));
 
         // Act
         BorrowingDTO result = addBorrowingUseCase.createBorrowing(testBorrowingDTO);
@@ -106,7 +138,6 @@ class AddBorrowingUseCaseTest {
         verify(borrowingMapper, times(1)).toEntity(testBorrowingDTO);
         verify(borrowingRepository, times(1)).save(testBorrowingEntity);
         verify(borrowingMapper, times(1)).toDTO(savedBorrowingEntity);
-        verify(rabbitTemplate, times(1)).convertAndSend(eq(RabbitMQConfig.BORROWING_CREATED_QUEUE), any(Object.class));
     }
 
     @Test
@@ -131,7 +162,6 @@ class AddBorrowingUseCaseTest {
         when(borrowingMapper.toEntity(any(BorrowingDTO.class))).thenReturn(testBorrowingEntity);
         when(borrowingRepository.save(any(BorrowingEntity.class))).thenReturn(savedBorrowingEntity);
         when(borrowingMapper.toDTO(any(BorrowingEntity.class))).thenReturn(testBorrowingDTO);
-        doNothing().when(rabbitTemplate).convertAndSend(anyString(), any(Object.class));
 
         // Act
         addBorrowingUseCase.createBorrowing(testBorrowingDTO);
@@ -141,7 +171,6 @@ class AddBorrowingUseCaseTest {
             event.getFormattedMessage().contains("AUDIT: Borrowing created") &&
             event.getFormattedMessage().contains("userId=" + testBorrowingDTO.getUserId())
         ));
-        verify(rabbitTemplate, times(1)).convertAndSend(eq(RabbitMQConfig.BORROWING_CREATED_QUEUE), any(Object.class));
         logger.detachAppender(mockAppender);
     }
 } 

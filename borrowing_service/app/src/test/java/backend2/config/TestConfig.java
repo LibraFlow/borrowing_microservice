@@ -7,6 +7,8 @@ import backend2.security.EncryptionService;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
+import org.springframework.kafka.core.KafkaTemplate;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @TestConfiguration
 public class TestConfig {
@@ -38,7 +40,10 @@ public class TestConfig {
     public AddBorrowingUseCase addBorrowingUseCase(
             BorrowingRepository borrowingRepository,
             BorrowingMapper borrowingMapper) {
-        return new AddBorrowingUseCase(borrowingRepository, borrowingMapper, null);
+        KafkaTemplate<String, String> kafkaTemplate = null;
+        ObjectMapper objectMapper = new ObjectMapper();
+        String userServiceUrl = "http://localhost:8081";
+        return new AddBorrowingUseCase(borrowingRepository, borrowingMapper, kafkaTemplate, objectMapper, userServiceUrl);
     }
 
     @Bean
