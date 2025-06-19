@@ -99,7 +99,7 @@ test:
   image: gradle:jdk17
   script:
     - cd borrowing_service
-    - gradle test -Dspring.profiles.active=test
+    - gradle test "-Dspring.profiles.active=test"
   dependencies:
     - build
 
