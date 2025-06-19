@@ -27,8 +27,9 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/actuator/health/**").permitAll()
                 .requestMatchers("/api/v1/borrowings/**").hasAnyRole("ADMINISTRATOR", "LIBRARIAN", "CUSTOMER")
-                .anyRequest().permitAll()
+                .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
