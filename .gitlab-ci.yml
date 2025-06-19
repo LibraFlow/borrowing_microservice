@@ -98,10 +98,10 @@ test:
   stage: test
   image: gradle:jdk17
   script:
-  - cd borrowing_service
-  - gradle test
+    - cd borrowing_service
+    - gradle test -Dspring.profiles.active=test
   dependencies:
-  - build
+    - build
 
 #deploy-cloud-run:
 #  stage: deploy-cloud-run
