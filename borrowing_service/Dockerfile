@@ -3,7 +3,7 @@ WORKDIR /app
 COPY . .
 RUN ./gradlew bootJar
 
-FROM openjdk:21-jdk-slim
+FROM gcr.io/distroless/java21-debian12
 WORKDIR /app
 COPY --from=build /app/app/build/libs/*.jar app.jar
 
@@ -16,18 +16,7 @@ ENV SPRING_DATASOURCE_DATABASE=db5
 
 EXPOSE 8086
 
-# Add health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8086/actuator/health || exit 1
-
-# Create startup script
-RUN echo '#!/bin/sh' > /app/start.sh && \
-    echo 'echo "Starting application with environment variables:"' >> /app/start.sh && \
-    echo 'echo "PORT: $PORT"' >> /app/start.sh && \
-    echo 'echo "SPRING_PROFILES_ACTIVE: $SPRING_PROFILES_ACTIVE"' >> /app/start.sh && \
-    echo 'echo "INSTANCE_CONNECTION_NAME: $INSTANCE_CONNECTION_NAME"' >> /app/start.sh && \
-    echo 'echo "SPRING_DATASOURCE_DATABASE: $SPRING_DATASOURCE_DATABASE"' >> /app/start.sh && \
-    echo 'exec java -Xmx512m -Xms256m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom -jar app.jar' >> /app/start.sh && \
-    chmod +x /app/start.sh
-
-CMD ["/app/start.sh"] 
+# The distroless image does not have a shell or tools like curl,
+# so the original HEALTHCHECK and startup script are removed.
+# The Java process is started directly.
+CMD ["/app/app.jar"] 

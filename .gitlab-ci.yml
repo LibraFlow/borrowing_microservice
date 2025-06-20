@@ -1,4 +1,7 @@
 stages:
+# - security_testing
+# - build
+# - test
 - deploy-kubernetes
 
 variables:
@@ -8,6 +11,137 @@ variables:
   NVD_API_KEY: ${NVD_API_KEY}
   KUBE_NAMESPACE: borrowing-service
   KUBE_CLUSTER: ${GCP_PROJECT_ID}-gke
+
+#cache:
+#  paths:
+#  - borrowing_service/app/.gradle/wrapper
+#  - borrowing_service/app/.gradle/caches
+#  - borrowing_service/app/dependency-check-data
+
+#static_analysis:
+#  stage: security_testing
+#  image: gradle:jdk17
+#  script:
+#    - cd borrowing_service
+#    - gradle spotbugsMain spotbugsTest
+#    # Check if SpotBugs found any issues
+#    - |
+#      if (Test-Path "app/build/reports/spotbugs/main.xml") {
+#        $xml = [xml](Get-Content "app/build/reports/spotbugs/main.xml")
+#        $bugCount = $xml.SelectNodes("//BugInstance").Count
+#        if ($bugCount -gt 0) {
+#          Write-Host "::warning::SpotBugs found $bugCount potential issues. Please review the detailed report in the artifacts."
+#          Write-Host "::warning::To view the report, download the artifacts from this job or check the Code Quality report."
+#          # Exit with code 0 to allow the pipeline to continue, but with a warning
+#          exit 0
+#        }
+#      }
+#  artifacts:
+#    when: always
+#    expire_in: 1 week
+#    reports:
+#      codequality: borrowing_service/app/build/reports/spotbugs/main.xml
+#    paths:
+#      - borrowing_service/app/build/reports/spotbugs/
+#  allow_failure: true  # Allow the stage to fail without stopping the pipeline
+#
+#dependency_check:
+#  stage: security_testing
+#  image: gradle:jdk17
+#  script:
+#    - cd borrowing_service
+#    - mkdir -p app/dependency-check-data
+#    - |
+#      if (-not $env:NVD_API_KEY) {
+#        Write-Host "::warning::NVD_API_KEY is not set. Dependency check will run with limited functionality."
+#        Write-Host "::warning::Please set NVD_API_KEY in GitLab CI/CD variables for better results."
+#      }
+#    - gradle dependencyCheckAnalyze
+#    # Check if dependency check report exists and contains vulnerabilities
+#    - |
+#      if (Test-Path "app/build/reports/dependency-check-report.html") {
+#        $html = Get-Content "app/build/reports/dependency-check-report.html" -Raw
+#        if ($html -match "Vulnerabilities Found") {
+#          Write-Host "::warning::Dependency check found vulnerabilities. Please review the report in the artifacts."
+#          Write-Host "::warning::To view the report, download the artifacts from this job."
+#          # Exit with code 0 to allow the pipeline to continue, but with a warning
+#          exit 0
+#        }
+#      } else {
+#        Write-Host "::warning::Dependency check report not generated. This might be due to missing NVD API key."
+#        exit 0
+#      }
+#  artifacts:
+#    when: always
+#    expire_in: 1 week
+#    reports:
+#      dependency_scanning: borrowing_service/app/build/reports/dependency-check-report.json
+#    paths:
+#      - borrowing_service/app/build/reports/dependency-check-report.html
+#      - borrowing_service/app/build/reports/dependency-check-report.json
+#  allow_failure: true  # Allow the stage to fail without stopping the pipeline
+#
+#build:
+#  stage: build
+#  image: gradle:jdk17
+#  script:
+#  - cd borrowing_service
+#  - gradle build
+#  artifacts:
+#    paths:
+#    - borrowing_service/app/build/libs/*.jar
+#  dependencies:
+#  - static_analysis
+#  - dependency_check
+#
+#test:
+#  stage: test
+#  image: gradle:jdk17
+#  script:
+#    - cd borrowing_service
+#    - gradle test "-Dspring.profiles.active=test"
+#  dependencies:
+#    - build
+
+#deploy-cloud-run:
+#  stage: deploy-cloud-run
+#  image: google/cloud-sdk:latest
+#  variables:
+#    DOCKER_HOST: npipe:////./pipe/docker_engine
+#  script:
+#    # Check if Docker is running
+#    - if (!(Test-Path "//./pipe/docker_engine")) { throw "Docker Desktop is not running. Please start Docker Desktop and try again." }
+#    # Handle service account
+#    - $bytes = [System.Text.Encoding]::UTF8.GetBytes($GCP_SERVICE_ACCOUNT_KEY)
+#    - $encodedText = [Convert]::ToBase64String($bytes)
+#    - Set-Content -Path "$env:TEMP\key.json" -Value $GCP_SERVICE_ACCOUNT_KEY
+#    # Configure Google Cloud
+#    - gcloud auth activate-service-account --key-file="$env:TEMP\key.json"
+#    - gcloud config set project $GCP_PROJECT_ID
+#    - gcloud auth configure-docker ${GCP_REGION}-docker.pkg.dev
+#    # Build and push Docker image
+#    - docker build -t $DOCKER_IMAGE ./borrowing_service
+#    - docker push $DOCKER_IMAGE
+#    # Deploy to Cloud Run
+#    - |
+#      gcloud run deploy borrowing-service `
+#        --image=$DOCKER_IMAGE `
+#        --platform=managed `
+#        --region=$GCP_REGION `
+#        --allow-unauthenticated `
+#        --port=8080 `
+#        --set-env-vars="SPRING_PROFILES_ACTIVE=prod" `
+#        --set-env-vars="INSTANCE_CONNECTION_NAME=${GCP_PROJECT_ID}:europe-west4:borrowing-service-db" `
+#        --set-cloudsql-instances=${GCP_PROJECT_ID}:europe-west4:borrowing-service-db `
+#        --min-instances=1 `
+#        --max-instances=3 `
+#        --cpu=1 `
+#        --memory=1Gi `
+#        --timeout=300 `
+#        --execution-environment=gen2 `
+#        --service-account=${GCP_SERVICE_ACCOUNT}
+#  only:
+#    - main
 
 deploy-kubernetes:
   stage: deploy-kubernetes
@@ -39,5 +173,20 @@ deploy-kubernetes:
     # Replace variables in deployment.yaml and apply
     - (Get-Content ./borrowing_service/kubernetes/deployment.yaml) -replace '\${GCP_REGION}', $GCP_REGION -replace '\${GCP_PROJECT_ID}', $GCP_PROJECT_ID -replace '\${CI_COMMIT_SHA}', $CI_COMMIT_SHA | kubectl apply -f - -n $KUBE_NAMESPACE
     - kubectl apply -f ./borrowing_service/kubernetes/service.yaml -n $KUBE_NAMESPACE
+  #dependencies:
+  #  - static_analysis
+  #  - build
   only:
     - main
+
+# build-docker-image:
+#   stage: build
+#   image: docker:latest
+#   services:
+#     - docker:dind
+#   script:
+#     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+#     - docker build -t registry.gitlab.com/$CI_PROJECT_PATH:latest ./borrowing_service
+#     - docker push registry.gitlab.com/$CI_PROJECT_PATH:latest
+#   only:
+#     - main
