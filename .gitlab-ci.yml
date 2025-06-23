@@ -2,7 +2,7 @@ stages:
  - security_testing
  - build
  - test
-- deploy-kubernetes
+ - deploy-kubernetes
 
 variables:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
